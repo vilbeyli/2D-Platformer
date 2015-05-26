@@ -4,7 +4,7 @@ using System.Collections;
 public class Weapon : MonoBehaviour {
 
 	public float fireRate = 0f;
-	public float damage = 10f;
+	public int damage = 10;
 	public LayerMask toHit;
 
 	public Transform bulletTransform;
@@ -61,7 +61,16 @@ public class Weapon : MonoBehaviour {
 			timeToSpawnEffect = Time.time + 1/effectSpawnRate;
 		}
 
-		//Debug.DrawLine(firePointPos, mousePos, Color.green);
+		Debug.DrawLine(firePointPos, (mousePos-firePointPos)*100, Color.green);
+	    if (hit.collider != null)
+	    {
+	        Debug.DrawLine(firePointPos, hit.point, Color.red);
+	        Enemy enemy = hit.collider.GetComponent<Enemy>();
+	        if (enemy != null)
+	        {
+	            enemy.DamageEnemy(damage);
+	        }
+	    }
 	}
 
 	void Effect()

@@ -31,6 +31,8 @@ public class EnemyAI : MonoBehaviour
 
     private int currentWaypoint = 0;
 
+    private bool searchingForPlayer = false;
+
     void Start()
     {
         seeker = GetComponent<Seeker>();
@@ -52,15 +54,35 @@ public class EnemyAI : MonoBehaviour
     {
         if (target == null)
         {
-            // TODO: insert a player search here.
-            yield return new WaitForSeconds(5);
+            if (!searchingForPlayer)
+            {
+                searchingForPlayer = true;
+                StartCoroutine(SearchForPlayer());
+            }
         }
 
         // Start a new path to the target position and return the result to the OnPathComplete method
-        seeker.StartPath(transform.position, target.position, OnPathComplete);
+        if (target != null) seeker.StartPath(transform.position, target.position, OnPathComplete);
 
         yield return new WaitForSeconds(1f/updateRate);
         StartCoroutine(UpdatePath());
+    }
+
+    private IEnumerator SearchForPlayer()
+    {
+        GameObject sResult=  GameObject.FindGameObjectWithTag("Player");
+        if (sResult == null)
+        {
+            yield return new WaitForSeconds(0.5f);
+            StartCoroutine(SearchForPlayer());
+        }
+        else
+        {
+            target = sResult.transform;
+            searchingForPlayer = false;
+            StartCoroutine(UpdatePath());
+        }
+
     }
 
     public void OnPathComplete(Path p)
