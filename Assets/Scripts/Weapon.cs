@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Security.Cryptography;
 
 public class Weapon : MonoBehaviour {
 
@@ -9,18 +10,20 @@ public class Weapon : MonoBehaviour {
 
 	public Transform bulletTransform;
 	public Transform MuzzleFlash;
+    public Transform hitPrefab;
+
 
 	float timeToSpawnEffect = 0;
 	public float effectSpawnRate = 10;
 
 	float timeToFire = 0f;
-	Transform firePont;
+	Transform firePoint;
 
 	// Use this for initialization
 	void Awake () 
 	{
-		firePont = transform.FindChild("FirePoint");
-		if(firePont == null)
+		firePoint = transform.FindChild("FirePoint");
+		if(firePoint == null)
 			Debug.LogError("Fire Point not found.");
 
 	}
@@ -52,14 +55,10 @@ public class Weapon : MonoBehaviour {
 	{
 		Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 		Vector2 mousePos = new Vector2(worldPoint.x, worldPoint.y);
-		Vector2 firePointPos = new Vector2(firePont.position.x, firePont.position.y);
+		Vector2 firePointPos = new Vector2(firePoint.position.x, firePoint.position.y);
 		RaycastHit2D hit = Physics2D.Raycast(firePointPos, mousePos-firePointPos, 100f, toHit);
 
-		if(Time.time >= timeToSpawnEffect)
-		{
-			Effect ();
-			timeToSpawnEffect = Time.time + 1/effectSpawnRate;
-		}
+		
 
 		Debug.DrawLine(firePointPos, (mousePos-firePointPos)*100, Color.green);
 	    if (hit.collider != null)
@@ -71,16 +70,51 @@ public class Weapon : MonoBehaviour {
 	            enemy.DamageEnemy(damage);
 	        }
 	    }
+
+        if (Time.time >= timeToSpawnEffect)
+        {
+            Vector3 hitPos, hitNormal;
+
+            if (hit.collider == null)
+            {
+                hitPos = (mousePos - firePointPos)*30;
+                hitNormal = new Vector3(9999, 9999, 9999);
+            }
+            else
+            {
+                hitPos = hit.point;
+                hitNormal = hit.normal;
+            }
+ 
+            Effect(hitPos, hitNormal);
+            timeToSpawnEffect = Time.time + 1 / effectSpawnRate;
+        }
 	}
 
-	void Effect()
+	void Effect( Vector3 hitPos, Vector3 normal)
 	{
 		// trail
-		Instantiate(bulletTransform, firePont.position, firePont.rotation);
+		Transform trail = Instantiate(bulletTransform, firePoint.position, firePoint.rotation) as Transform;
+	    LineRenderer lr = trail.GetComponent<LineRenderer>();
+
+	    if (lr != null)
+	    {
+	        // set positions
+            lr.SetPosition(0, firePoint.position);
+            lr.SetPosition(1, hitPos);
+	    }
+
+        Destroy(trail.gameObject, 0.04f);
+
+	    if (normal != new Vector3(9999, 9999, 9999))
+	    {
+            Transform hitParticle = (Transform) Instantiate(hitPrefab, hitPos, Quaternion.FromToRotation(Vector3.right, normal));
+	        Destroy(hitParticle.gameObject, 1f);
+        }
 
 		// muzzle flash
-		Transform clone = (Transform)Instantiate(MuzzleFlash, firePont.position, firePont.rotation);
-		clone.parent = firePont;
+		Transform clone = (Transform)Instantiate(MuzzleFlash, firePoint.position, firePoint.rotation);
+		clone.parent = firePoint;
 		float size = Random.Range(0.6f, 0.9f);
 		clone.localScale = new Vector3(size, size, size);
 		Destroy(clone.gameObject, 0.02f);

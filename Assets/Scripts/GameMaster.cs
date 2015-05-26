@@ -19,7 +19,7 @@ public class GameMaster : MonoBehaviour {
 
 	public IEnumerator RespawnPlayer()
 	{
-		audio.Play ();
+		GetComponent<AudioSource>().Play ();
 		yield return new WaitForSeconds(spawnDelay);
 		Instantiate(player, spawnPoint.position, spawnPoint.rotation);
 		Transform clone = (Transform)Instantiate(spawnPrefab, spawnPoint.position, spawnPoint.rotation);

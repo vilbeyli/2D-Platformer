@@ -15,7 +15,7 @@ public class DoorController : MonoBehaviour {
 	
 	public void Start () {
 		// Capture the bounds of the collider while it is closed
-		bounds = collider.bounds;
+		bounds = GetComponent<Collider>().bounds;
 
 		// Initially open the door
 		SetState (open);
@@ -51,9 +51,9 @@ public class DoorController : MonoBehaviour {
 
 		// Play door animations
 		if (open) {
-			animation.Play ("Open");
+			GetComponent<Animation>().Play ("Open");
 		} else {
-			animation.Play ("Close");
+			GetComponent<Animation>().Play ("Close");
 		}
 	}
 }
